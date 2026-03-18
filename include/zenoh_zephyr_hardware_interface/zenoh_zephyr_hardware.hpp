@@ -50,7 +50,11 @@ public:
   std::vector<double> hw_states_;
 
   mutable std::mutex data_mutex_;
-  std::vector<double> hw_state_buffer_;
+  std::atomic<bool> new_data_available_{false};
+  std::vector<double> hw_state_buffer_[2];
+  std::vector<double> hw_state_buffer_back_;
+  std::vector<double> hw_state_buffer_front_;
+  std::atomic<int> write_index_{0};
 };
 
 }  // namespace zenoh_zephyr_control
