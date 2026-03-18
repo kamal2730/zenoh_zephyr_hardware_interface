@@ -1,0 +1,9 @@
+<library path="zenoh_zephyr_hardware_interface">
+  <class name="zenoh_zephyr_hardware_interface/ZenohZephyrHardware"
+         type="zenoh_zephyr_control::ZenohZephyrHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      A high-performance, agent-less Zenoh interface for Zephyr RTOS microcontrollers.
+    </description>
+  </class>
+</library>

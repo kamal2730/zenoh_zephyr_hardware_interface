@@ -10,6 +10,44 @@ find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(zenohc REQUIRED)
+find_package(zenohcxx REQUIRED)
+
+add_library(${PROJECT_NAME} SHARED
+  src/zenoh_zephyr_hardware.cpp
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+  include
+)
+
+target_link_libraries(${PROJECT_NAME}
+  PRIVATE
+    ${hardware_interface_LIBRARIES}
+    ${pluginlib_LIBRARIES}
+    ${rclcpp_LIBRARIES}
+    ${rclcpp_lifecycle_LIBRARIES}
+    zenohcxx::zenohc
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+  include
+  ${hardware_interface_INCLUDE_DIRS}
+  ${pluginlib_INCLUDE_DIRS}
+  ${rclcpp_INCLUDE_DIRS}
+  ${rclcpp_lifecycle_INCLUDE_DIRS}
+)
+
+pluginlib_export_plugin_description_file(hardware_interface zenoh_zephyr_hardware_interface.xml)
+
+install(TARGETS
+  ${PROJECT_NAME}
+  DESTINATION lib
+)
+install(DIRECTORY include/
+  DESTINATION include
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
