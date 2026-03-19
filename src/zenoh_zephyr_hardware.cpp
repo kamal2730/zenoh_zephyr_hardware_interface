@@ -8,17 +8,7 @@
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
-
-#pragma pack(push, 1)
-struct JointState {
-    float position;
-};
-#pragma pack(pop)
-#pragma pack(push, 1)
-struct JointCmd {
-    float command;
-};
-#pragma pack(pop)
+#include "zenoh_zephyr_hardware_interface/msg.h"
 
 namespace zenoh_zephyr_control
 {
@@ -113,12 +103,12 @@ CallbackReturn ZenohZephyrHardware::on_activate(const rclcpp_lifecycle::State & 
         [this](const zenoh::Sample& sample) {
             const auto& payload = sample.get_payload();
             size_t num_joints = hw_state_buffer_[0].size();
-            size_t expected_size = sizeof(JointState) * num_joints;
+            size_t expected_size = sizeof(state_msg_t) * num_joints;
 
             if (payload.size() == expected_size) {
                 int write_idx = 1 - write_index_.load(std::memory_order_acquire);
                 std::vector<uint8_t> vec = payload.as_vector();
-                const auto* incoming = reinterpret_cast<const JointState*>(vec.data());
+                const auto* incoming = reinterpret_cast<const state_msg_t*>(vec.data());
                 for (size_t i = 0; i < num_joints; ++i) {
                     hw_state_buffer_[write_idx][i] = static_cast<double>(incoming[i].position);
                 }
@@ -173,12 +163,12 @@ hardware_interface::return_type ZenohZephyrHardware::write(
 {
     if (!zenoh_publisher_.has_value()) return hardware_interface::return_type::OK;
 
-    std::vector<JointCmd> commands_to_send(hw_commands_.size());
+    std::vector<command_msg_t> commands_to_send(hw_commands_.size());
     for (size_t i = 0; i < hw_commands_.size(); i++) {
         commands_to_send[i].command = static_cast<float>(hw_commands_[i]);
     }
     const uint8_t* ptr = reinterpret_cast<const uint8_t*>(commands_to_send.data());
-    std::vector<uint8_t> data(ptr, ptr + commands_to_send.size() * sizeof(JointCmd));
+    std::vector<uint8_t> data(ptr, ptr + commands_to_send.size() * sizeof(command_msg_t));
     zenoh_publisher_->put(zenoh::Bytes(std::move(data)));
     return hardware_interface::return_type::OK;
 }
