@@ -10,6 +10,12 @@
 #include "rclcpp/rclcpp.hpp"
 #include "zenoh_zephyr_hardware_interface/msg.h"
 
+uint64_t get_time_us() {
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+}
+
 namespace zenoh_zephyr_control
 {
 
@@ -91,6 +97,9 @@ CallbackReturn ZenohZephyrHardware::on_activate(const rclcpp_lifecycle::State & 
   hw_state_buffer_[0].resize(info_.joints.size(), 0.0);
   hw_state_buffer_[1].resize(info_.joints.size(), 0.0);
 
+  auto node = rclcpp::Node::make_shared("zenoh_hw_latency");
+  latency_pub_ = node->create_publisher<std_msgs::msg::Float64>("latency", rclcpp::SensorDataQoS());
+
   auto config = zenoh::Config::create_default();
   config.insert_json5("connect/endpoints", "[\"" + zenoh_endpoint_ + "\"]");
   config.insert_json5("mode", "\"" + zenoh_mode_ + "\"");
@@ -111,6 +120,11 @@ CallbackReturn ZenohZephyrHardware::on_activate(const rclcpp_lifecycle::State & 
                 const auto* incoming = reinterpret_cast<const state_msg_t*>(vec.data());
                 for (size_t i = 0; i < num_joints; ++i) {
                     hw_state_buffer_[write_idx][i] = static_cast<double>(incoming[i].position);
+                    uint64_t now = get_time_us();
+                    uint64_t latency = (now - incoming[i].timestamp); 
+                    std_msgs::msg::Float64 msg;
+                    msg.data=(float)latency/1000;
+                    latency_pub_->publish(msg);
                 }
                 write_index_.store(write_idx, std::memory_order_release);
                 new_data_available_.store(true, std::memory_order_release);
@@ -165,7 +179,9 @@ hardware_interface::return_type ZenohZephyrHardware::write(
 
     std::vector<command_msg_t> commands_to_send(hw_commands_.size());
     for (size_t i = 0; i < hw_commands_.size(); i++) {
-        commands_to_send[i].command = static_cast<float>(hw_commands_[i]);
+      uint64_t now = get_time_us();
+      commands_to_send[i].timestamp = now;
+      commands_to_send[i].command = static_cast<float>(hw_commands_[i]);
     }
     const uint8_t* ptr = reinterpret_cast<const uint8_t*>(commands_to_send.data());
     std::vector<uint8_t> data(ptr, ptr + commands_to_send.size() * sizeof(command_msg_t));

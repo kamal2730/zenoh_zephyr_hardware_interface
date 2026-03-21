@@ -15,6 +15,9 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include <zenoh.hxx>
 
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/float64.hpp"
+
 namespace zenoh_zephyr_control
 {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -55,6 +58,9 @@ public:
   std::vector<double> hw_state_buffer_back_;
   std::vector<double> hw_state_buffer_front_;
   std::atomic<int> write_index_{0};
+
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr latency_pub_;
+  std::vector<uint64_t> latency_samples_;
 };
 
 }  // namespace zenoh_zephyr_control

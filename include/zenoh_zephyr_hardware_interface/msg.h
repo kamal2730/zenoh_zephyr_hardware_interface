@@ -17,10 +17,12 @@ extern "C" {
 
 typedef struct PACKED {
     float position;
+    uint64_t timestamp;
 } state_msg_t;
 
 typedef struct PACKED {
     float command;
+    uint64_t timestamp;
 } command_msg_t;
 
 #pragma pack(pop)
