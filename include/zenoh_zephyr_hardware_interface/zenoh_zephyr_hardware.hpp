@@ -5,6 +5,7 @@
 #include <string>
 #include <mutex>
 #include <vector>
+#include <atomic>
 
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/handle.hpp"
@@ -17,6 +18,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64.hpp"
+#include "zenoh_zephyr_hardware_interface/msg.h"
 
 namespace zenoh_zephyr_control
 {
@@ -26,6 +28,7 @@ class ZenohZephyrHardware : public hardware_interface::SystemInterface
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(ZenohZephyrHardware)
+
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
@@ -36,27 +39,31 @@ public:
 
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override;
 
-  hardware_interface::return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
+  hardware_interface::return_type read(
+    const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
-  hardware_interface::return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) override;
-  private:
+  hardware_interface::return_type write(
+    const rclcpp::Time & time, const rclcpp::Duration & period) override;
+
+private:
   // Zenoh communication
   std::unique_ptr<zenoh::Session> zenoh_session_;
   std::unique_ptr<zenoh::Subscriber<void>> zenoh_subscriber_;
   std::optional<zenoh::Publisher> zenoh_publisher_;
+
   std::string zenoh_endpoint_;
   std::string zenoh_mode_;
   std::string sub_topic_name_;
   std::string pub_topic_name_;
 
   std::vector<double> hw_commands_;
-  std::vector<double> hw_states_;
+  std::vector<state_msg_t> hw_states_raw_;
+  std::vector<double> hw_pos_;
+  std::vector<double> hw_vel_;
+  std::vector<double> hw_eff_;
+  std::vector<state_msg_t> hw_state_buffer_[2];
 
-  mutable std::mutex data_mutex_;
   std::atomic<bool> new_data_available_{false};
-  std::vector<double> hw_state_buffer_[2];
-  std::vector<double> hw_state_buffer_back_;
-  std::vector<double> hw_state_buffer_front_;
   std::atomic<int> write_index_{0};
 
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr latency_pub_;
@@ -65,4 +72,4 @@ public:
 
 }  // namespace zenoh_zephyr_control
 
-#endif  // ZENOH_ZEPHYR_HARDWARE_INTERFACE__ZENOH_ZEPHYR_HARDWARE_HPP_
+#endif

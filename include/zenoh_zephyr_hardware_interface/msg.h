@@ -17,6 +17,8 @@ extern "C" {
 
 typedef struct PACKED {
     float position;
+    float velocity;
+    float effort;
     uint64_t timestamp;
 } state_msg_t;
 
