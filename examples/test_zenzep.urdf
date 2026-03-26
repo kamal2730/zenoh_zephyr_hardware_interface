@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot name="zenzep_test_robot">
+
+  <link name="base_link"/>
+
+  <link name="link_1">
+    <visual>
+      <geometry>
+        <cylinder length="0.2" radius="0.05"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="joint_1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link_1"/>
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14" upper="3.14" effort="10" velocity="10"/>
+  </joint>
+
+  <ros2_control name="ZenZepHardware" type="system">
+    <hardware>
+      <plugin>zenoh_zephyr_hardware_interface/ZenohZephyrHardware</plugin>
+      <param name="zenoh_endpoint">udp/192.168.0.189:7447</param>
+      <param name="joint_history_topic">demo/test/state</param>
+      <param name="joint_command_topic">demo/test/cmd</param>
+    </hardware>
+    <joint name="joint_1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <!-- <state_interface name="velocity"/>
+      <state_interface name="effort"/> -->
+    </joint>
+  </ros2_control>
+
+</robot>
