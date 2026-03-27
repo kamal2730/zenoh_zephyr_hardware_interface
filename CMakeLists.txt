@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(zenohc REQUIRED)
@@ -23,13 +24,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE
     ${hardware_interface_LIBRARIES}
     ${pluginlib_LIBRARIES}
     ${rclcpp_LIBRARIES}
     ${rclcpp_lifecycle_LIBRARIES}
     zenohcxx::zenohc
 )
+
+ament_target_dependencies(${PROJECT_NAME} std_msgs)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
