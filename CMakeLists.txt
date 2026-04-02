@@ -24,21 +24,19 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME}
-    ${hardware_interface_LIBRARIES}
-    ${pluginlib_LIBRARIES}
-    ${rclcpp_LIBRARIES}
-    ${rclcpp_lifecycle_LIBRARIES}
     zenohcxx::zenohc
 )
 
-ament_target_dependencies(${PROJECT_NAME} std_msgs)
+ament_target_dependencies(${PROJECT_NAME}
+  hardware_interface
+  rclcpp
+  std_msgs
+  pluginlib
+  rclcpp_lifecycle
+)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
-  ${hardware_interface_INCLUDE_DIRS}
-  ${pluginlib_INCLUDE_DIRS}
-  ${rclcpp_INCLUDE_DIRS}
-  ${rclcpp_lifecycle_INCLUDE_DIRS}
 )
 
 pluginlib_export_plugin_description_file(hardware_interface zenoh_zephyr_hardware_interface.xml)
